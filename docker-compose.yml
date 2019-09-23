@@ -1,0 +1,90 @@
+version: '3'
+
+services:
+  web:
+    image: nginx:latest
+    container_name: web
+    ports:
+     - "80:8000"
+    command: nginx-debug -g 'daemon off;'
+    working_dir: /opt/yii/framework/frame_teste
+    links:
+      - php1
+    networks:
+      - develop
+    volumes:
+      - ./framework/frame_test:/opt/yii/framework/frame_test
+      - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+      - /usr/share/zoneinfo/Europe/London:/etc/localtime
+    depends_on:
+      - php1
+      - php2
+      - php3
+  db:
+    image: mysql
+    container_name: database
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    volumes:
+     - /usr/share/zoneinfo/Europe/London:/etc/localtime
+    networks:
+      - develop
+    environment:
+      MYSQL_DATABASE: 'yii_database'
+      MYSQL_USER: 'root'
+      MYSQL_PASSWORD: 'yii'
+      MYSQL_ROOT_PASSWORD: 'root'
+  php1:
+    image: php:5-fpm
+    container_name: php1
+    volumes:
+      - .:/opt/yii
+      - /usr/share/zoneinfo/Europe/London:/etc/localtime
+    working_dir: /opt/yii
+    command: sh install.sh
+    environment:
+      INSTALL_VENDOR: 'y'
+    networks:
+      - develop
+    depends_on:
+      - db
+    links:
+      - db
+  php2:
+    image: php:5-fpm
+    container_name: php2
+    volumes:
+      - .:/opt/yii
+      - /usr/share/zoneinfo/Europe/London:/etc/localtime
+    working_dir: /opt/yii
+    command: sh install.sh
+    environment:
+      INSTALL_VENDOR: 'n'
+    networks:
+      - develop
+    depends_on:
+      - db
+    links:
+      - db
+  php3:
+    image: php:5-fpm
+    container_name: php3
+    volumes:
+      - .:/opt/yii
+      - /usr/share/zoneinfo/Europe/London:/etc/localtime
+    working_dir: /opt/yii
+    command: sh install.sh
+    environment:
+      INSTALL_VENDOR: 'n'
+    networks:
+      - develop
+    depends_on:
+      - db
+    links:
+      - db
+networks:
+  develop:
+    driver: bridge
